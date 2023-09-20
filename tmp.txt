@@ -1,0 +1,6 @@
+inside sense content
+sense label for next dtText
+dtText(Defining Text): it's own content
+sdsense
+
+

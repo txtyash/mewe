@@ -1,0 +1,38 @@
+[
+  {
+    "meta": {
+      "stems": [
+        "a good word",
+        "good word",
+        "in a word",
+        "in so many words",
+        "of few words",
+        "of her word",
+        "of his word",
+        "of its words",
+        "of my word",
+        "of one\u0027s word",
+        "of our word",
+        "of their word",
+        "of your word",
+        "the good word",
+        "upon my word",
+        "word",
+        "words"
+      ],
+      "offensive": false
+    },
+    "shortdef": [
+      "a speech sound or series of speech sounds that symbolizes and communicates a meaning usually without being divisible into smaller units capable of independent use",
+      "the entire set of linguistic forms produced by combining a single base with various inflectional elements without change in the part of speech elements",
+      "a written or printed character or combination of characters representing a spoken word \u2014sometimes used with the first letter of a real or pretended taboo word prefixed as an often humorous euphemism"
+    ]
+  },
+  {
+    "meta": {
+      "stems": ["word", "worded", "wording", "words"],
+      "offensive": false
+    },
+    "shortdef": ["to express in words : phrase", "speak"]
+  }
+]
