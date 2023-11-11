@@ -24,8 +24,8 @@
         with pkgs; {
           devShells.default = mkShell {
             buildInputs = [
-              # eza
-              # fd
+              openssl
+              pkg-config
               rust-bin.beta.latest.default
             ];
 
