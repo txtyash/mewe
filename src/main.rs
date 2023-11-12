@@ -16,17 +16,6 @@ impl fmt::Display for DefinitionMissing {
     }
 }
 
-#[derive(Debug, Clone)]
-struct NoSuggestions;
-
-impl Error for NoSuggestions {}
-
-impl fmt::Display for NoSuggestions {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Incorrect spelling.")
-    }
-}
-
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
@@ -84,7 +73,7 @@ async fn suggestions(document: Html) -> Result<String> {
     let ss_sel = Selector::parse("p.spelling-suggestions")?;
     for node in document.select(&ss_sel) {
         suggestions.push_str(&node.text().collect::<String>());
-        suggestions.push_str(",");
+        suggestions.push(',');
     }
     Ok(suggestions)
 }
