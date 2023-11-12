@@ -1,130 +1,90 @@
-use regex::Regex;
-use reqwest::{blocking::get, StatusCode};
+use clap::Parser;
+use reqwest::get;
 use scraper::{Html, Selector};
-use std::error::Error;
+use std::{error::Error, fmt};
 
-#[derive(Debug)]
-struct Word {
-    text: String,
-    definitions: Vec<DefiningText>,
-    suggestions: Vec<Suggestion>,
-}
+type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
-/// Defining Text
-#[derive(Debug)]
-struct DefiningText {
-    text: String,      // TODO: prepend subject label
-    div_sense: String, // Divided Sense
-    illustrations: Vec<Illustration>,
-}
+#[derive(Debug, Clone)]
+struct DefinitionMissing;
 
-// Similar words
-#[derive(Debug)]
-struct Suggestion {
-    text: String,
-}
+impl Error for DefinitionMissing {}
 
-// Verbal Illustration
-#[derive(Debug)]
-struct Illustration {
-    text: String,
-}
-
-/// Whether to look for definitions or suggestions?
-#[derive(Debug)]
-enum Action {
-    FindDefinitions,
-    FindSuggestions,
-}
-
-/// print suggestions/definitions/errors
-fn main() {
-    let query = "drums";
-    let result: Result<Word, Box<dyn Error>> = match get_request(query) {
-        Ok((action, document)) => match action {
-            Action::FindDefinitions => get_definitions(query, document),
-            Action::FindSuggestions => get_suggestions(query, document),
-        },
-        Err(e) => Err(e),
-    };
-    println!("{result:#?}")
-}
-
-/// Makes a get request & returns a scraper::html::Html struct
-fn get_request(query: &'static str) -> Result<(Action, String), Box<dyn Error>> {
-    // TODO: Set a timeout for requests.
-    let response = get(format!(
-        "https://www.merriam-webster.com/dictionary/{query}"
-    ))?; // TODO: Handle Error
-
-    let action = match &response.status() {
-        &StatusCode::OK => Action::FindDefinitions,
-        _ => Action::FindSuggestions, // HACK: is this always be a 404?
-    };
-
-    let document = response.text()?; // TODO: Handle Error
-
-    Ok((action, document))
-}
-
-/// grab suggestions
-fn get_suggestions(query: &'static str, document: String) -> Result<Word, Box<dyn Error>> {
-    Html::parse_document(&document);
-    Ok(Word {
-        text: query.to_string(),
-        definitions: Vec::new(),
-        suggestions: Vec::new(),
-    })
-}
-
-/// grab word data
-fn get_definitions(query: &'static str, document: String) -> Result<Word, Box<dyn Error>> {
-    let mut result = Word {
-        text: query.to_string(),
-        definitions: Vec::new(),
-        suggestions: Vec::new(),
-    };
-    let document = Html::parse_document(&document);
-    let vg_sel = Selector::parse("div.vg").unwrap();
-    let sc_sel = Selector::parse("div.sense-content").unwrap();
-    let def_sel = Selector::parse("span.dtText").unwrap();
-    let sdsense_sel = Selector::parse("div.sdsense").unwrap();
-    let ex_sel = Selector::parse("span.ex-sent").unwrap();
-    let sl_sel = Selector::parse("span.sl").unwrap();
-
-    // Select first dictionary
-    let vg1 = document.select(&vg_sel).next().unwrap();
-
-    for sc in vg1.select(&sc_sel) {
-        let sub_label = match sc.select(&sl_sel).next() {
-            Some(subject_label) => neat_text(subject_label.text().collect()),
-            None => String::new(),
-        };
-        let mut definition: DefiningText = DefiningText {
-            text: [
-                sub_label,
-                neat_text(sc.select(&def_sel).next().unwrap().text().collect()),
-            ]
-            .concat(),
-            div_sense: match sc.select(&sdsense_sel).next() {
-                Some(sdsense) => neat_text(sdsense.text().collect()),
-                None => String::new(),
-            },
-            illustrations: Vec::new(),
-        };
-        for example in sc.select(&ex_sel) {
-            let example: Illustration = Illustration {
-                text: neat_text(example.text().collect()),
-            };
-            definition.illustrations.push(example);
-        }
-        // add definition to word
-        result.definitions.push(definition);
+impl fmt::Display for DefinitionMissing {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Could not find the definition.")
     }
-    Ok(result)
 }
 
-fn neat_text(text: String) -> String {
-    let re = Regex::new(r"(\\n|[\s\r]|^\s*:\s*)+").unwrap(); // TODO: HANDLE ERROR
-    re.replace_all(&text, " ").trim().to_string()
+#[derive(Debug, Clone)]
+struct NoSuggestions;
+
+impl Error for NoSuggestions {}
+
+impl fmt::Display for NoSuggestions {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Incorrect spelling.")
+    }
+}
+
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    /// Word to search
+    #[arg(num_args(1))]
+    query: String,
+}
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    let args = Args::parse();
+
+    let query = args.query;
+    // https://www.merriam-webster.com/dictionary/stuff
+    let html = get(format!(
+        "https://www.merriam-webster.com/dictionary/{}",
+        query
+    ))
+    .await?
+    .text()
+    .await?;
+    let document = Html::parse_document(&html);
+    println!("Query: {}", query);
+    if let Ok(mut definition) = definition(document.clone()).await {
+        // Remove this suffix from every definition: "How to use stuff in a sentence."
+        definition.truncate(definition.len() - 32);
+        println!("Definition: {}", definition);
+    } else if let Ok(suggestions) = suggestions(document).await {
+        if !suggestions.is_empty() {
+            println!("You probably misspelled it.");
+            println!("Suggestions: {}", suggestions);
+        } else {
+            println!("Word not found.");
+        }
+    }
+    Ok(())
+}
+
+async fn definition(document: Html) -> Result<String> {
+    // Selector for definition: <meta name="description" content="The meaning of STUFF is materials, supplies, or equipment used in various activities. How to use stuff in a sentence.">
+    let def_sel = Selector::parse(r#"meta[name="description"]"#)?;
+    match document
+        .select(&def_sel)
+        .next()
+        .and_then(|node| node.value().attr("content"))
+    {
+        Some(definition) => Ok(definition.into()),
+        _ => Err(Box::new(DefinitionMissing)),
+    }
+}
+
+async fn suggestions(document: Html) -> Result<String> {
+    // Selector for: <p class="spelling-suggestions"><a href="/medical/sluff">sluff</a></p>
+    let mut suggestions = String::new();
+    let ss_sel = Selector::parse("p.spelling-suggestions")?;
+    for node in document.select(&ss_sel) {
+        suggestions.push_str(&node.text().collect::<String>());
+        suggestions.push_str(",");
+    }
+    Ok(suggestions)
 }
