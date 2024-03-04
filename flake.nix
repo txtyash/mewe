@@ -8,7 +8,6 @@
   };
 
   outputs = {
-    self,
     nixpkgs,
     rust-overlay,
     flake-utils,
@@ -28,7 +27,8 @@
               pkg-config
               rust-bin.beta.latest.default
             ];
-
+            packages = [ pkgs.bashInteractive ];
+            # TODO: Read on shellHooks
             shellHook = ''
               # alias ls=eza
               # alias find=fd
