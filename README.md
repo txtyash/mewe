@@ -1,32 +1,27 @@
 # MEWE
 
-mewe is a simple cli dictionary app that fetches data from the merriam webster site.
-Although I do not have any permmissions from merriam, mewe scrapes very little harmless data.
+Mewe is a simple cli dictionary app that fetches one line definitions from the merriam webster site.
 
-## USAGE
+## Usage
 
-After cloning the repository, simply pass your word queries to the app & run:
+Search for a word:
 ```
-❯ cargo run -- stuff
-    Finished dev [unoptimized + debuginfo] target(s) in 0.09s
-     Running `target/debug/mewe stuff`
-Query: stuff
-Definition: The meaning of STUFF is materials, supplies, or equipment used in various activities.
+❯ mewe stuff
+The meaning of STUFF is materials, supplies, or equipment used in various activities.
 ```
-or wrapped in quotes
+Suggestions for misspelled words:
 ```
-❯ cargo run -- "stuff it"
-    Finished dev [unoptimized + debuginfo] target(s) in 0.09s
-     Running `target/debug/mewe 'stuff it'`
-Query: stuff it
-Definition: The meaning of STUFF IT is —used as an angry and rude way to say that one does not want something or is not interested in something. Ho
+❯ mewe stuffx
+You probably misspelled it. Suggestions:
+stuffs,stuff,stubs,stuffy,stuffies,stuffed,stuffiest,stuffer,stubes,stuffie,stuff gown,restuffs,stuff shot,stuff it,stupas,sluff,sluffs,snuff,puffs,puffy,
 ```
-handles misspelled words
+Help:
 ```
-❯ cargo run -- stuffx
-Finished dev [unoptimized + debuginfo] target(s) in 0.09s
-Running `target/debug/mewe stuffx`
-Query: stuffx
-You probably misspelled it.
-Suggestions: stuffs,stuff,stubs,stuffy,stuffies,stuffed,stuffiest,stuffer,stubes,stuffie,stuff gown,restuffs,stuff shot,stuff it,stupas,sluff,sluffs,snuff,puffs,puffy,
+❯ mewe --help
 ```
+
+## Use as a Dependency
+
+You can use mewe as a dependency.\
+Published: <https://crates.io/crates/mewe>\
+Docs: <https://docs.rs/mewe>
