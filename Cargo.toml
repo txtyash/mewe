@@ -2,6 +2,14 @@
 name = "mewe"
 version = "0.1.0"
 edition = "2021"
+description = "CLI dictionary app. Fetches only one definition from Merriam Webster."
+license = "MIT"
+categories = ["command-line-utilities", "dictionary"]
+keywords = ["merriam", "webster", "dictionary", "mewe", "definition"]
+readme = "README.md"
+homepage = "https://github.com/txtyash/mewe"
+repository = "https://github.com/txtyash/mewe"
+documentation = "https://docs.rs/mewe"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
