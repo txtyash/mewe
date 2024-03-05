@@ -9,6 +9,7 @@ struct Args {
     query: String,
 }
 
+/// Grabs user query from the cli and searches it using the search() function
 #[tokio::main]
 async fn main() {
     let args = Args::parse();
