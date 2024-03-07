@@ -4,7 +4,8 @@ version = "0.1.0"
 edition = "2021"
 description = "CLI dictionary app. Fetches only one definition from Merriam Webster."
 license = "MIT"
-categories = ["command-line-utilities", "dictionary"]
+# Valid categories: <https://crates.io/category_slugs>
+categories = ["command-line-utilities"]
 keywords = ["merriam", "webster", "dictionary", "mewe", "definition"]
 readme = "README.md"
 homepage = "https://github.com/txtyash/mewe"
